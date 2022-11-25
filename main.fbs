@@ -1,0 +1,70 @@
+namespace NetworkModels.CAN;
+
+enum BusState:byte {BusOff = 0, Idle = 1, Sync = 2 }
+
+table CanStatus {
+
+    sync:BusState = Idle;
+}
+
+
+struct TimeSpec {
+
+    psec10:long = 0;
+}
+
+struct MessageTiming {
+
+    send_request:TimeSpec;
+    arbitration:TimeSpec;
+    reception:TimeSpec;
+}
+
+enum BufferDirection:byte { Tx = 0, Rx = 1 }
+
+enum BufferStatus:byte { None = 0, RxError = 1 }
+
+enum FrameType:byte {
+
+    standard_frame = 0,
+    extended_fram = 1
+}
+
+table Frame {
+
+    frame_id:uint = 0;
+    payload:[ubyte];
+
+    length:ubyte = 0;
+
+    rtr:bool = 0;
+    type:FrameType = standard_frame;
+}
+
+
+enum CanFDIndicator:byte {
+
+    can=0,
+    canFD=1
+}
+
+table MetaFrame {
+
+    status:BufferStatus = None;
+    direction:BufferDirection = Tx;
+    canFD_enabled:CanFDIndicator;
+
+    frame:Frame;
+   
+}
+
+
+table RegisterFile {
+
+    buffer:[MetaFrame];
+
+}
+
+root_type RegisterFile;
+file_identifier "NMCA";
+file_extension "can";

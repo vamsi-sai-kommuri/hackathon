@@ -1,0 +1,26 @@
+namespace NetworkModels.CAN1;
+
+
+enum CanFDIndicator:byte {
+
+    can=0,
+    canFD=1
+}
+
+
+table MetaFrame {
+
+    canFD_enabled:CanFDIndicator;
+
+}
+
+
+table RegisterFile {
+
+    buffer:[MetaFrame];
+
+}
+
+root_type RegisterFile;
+file_identifier "NMCA";
+file_extension "can";
