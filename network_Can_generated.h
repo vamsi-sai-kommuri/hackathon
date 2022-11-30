@@ -377,8 +377,7 @@ struct MetaFrame FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_STATUS = 4,
     VT_DIRECTION = 6,
     VT_CANFD_ENABLED = 8,
-    VT_FRAME = 10,
-    VT_TIMING = 12
+    VT_FRAME = 10
   };
   NetworkModels::CAN::BufferStatus status() const {
     return static_cast<NetworkModels::CAN::BufferStatus>(GetField<int8_t>(VT_STATUS, 0));
@@ -392,9 +391,6 @@ struct MetaFrame FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const NetworkModels::CAN::Frame *frame() const {
     return GetPointer<const NetworkModels::CAN::Frame *>(VT_FRAME);
   }
-  const NetworkModels::CAN::MessageTiming *timing() const {
-    return GetStruct<const NetworkModels::CAN::MessageTiming *>(VT_TIMING);
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_STATUS, 1) &&
@@ -402,7 +398,6 @@ struct MetaFrame FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<int8_t>(verifier, VT_CANFD_ENABLED, 1) &&
            VerifyOffset(verifier, VT_FRAME) &&
            verifier.VerifyTable(frame()) &&
-           VerifyFieldRequired<NetworkModels::CAN::MessageTiming>(verifier, VT_TIMING, 8) &&
            verifier.EndTable();
   }
 };
@@ -423,9 +418,6 @@ struct MetaFrameBuilder {
   void add_frame(flatbuffers::Offset<NetworkModels::CAN::Frame> frame) {
     fbb_.AddOffset(MetaFrame::VT_FRAME, frame);
   }
-  void add_timing(const NetworkModels::CAN::MessageTiming *timing) {
-    fbb_.AddStruct(MetaFrame::VT_TIMING, timing);
-  }
   explicit MetaFrameBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -433,7 +425,6 @@ struct MetaFrameBuilder {
   flatbuffers::Offset<MetaFrame> Finish() {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<MetaFrame>(end);
-    fbb_.Required(o, MetaFrame::VT_TIMING);
     return o;
   }
 };
@@ -443,10 +434,8 @@ inline flatbuffers::Offset<MetaFrame> CreateMetaFrame(
     NetworkModels::CAN::BufferStatus status = NetworkModels::CAN::BufferStatus_None,
     NetworkModels::CAN::BufferDirection direction = NetworkModels::CAN::BufferDirection_Tx,
     NetworkModels::CAN::CanFDIndicator canFD_enabled = NetworkModels::CAN::CanFDIndicator_can,
-    flatbuffers::Offset<NetworkModels::CAN::Frame> frame = 0,
-    const NetworkModels::CAN::MessageTiming *timing = nullptr) {
+    flatbuffers::Offset<NetworkModels::CAN::Frame> frame = 0) {
   MetaFrameBuilder builder_(_fbb);
-  builder_.add_timing(timing);
   builder_.add_frame(frame);
   builder_.add_canFD_enabled(canFD_enabled);
   builder_.add_direction(direction);
@@ -457,16 +446,24 @@ inline flatbuffers::Offset<MetaFrame> CreateMetaFrame(
 struct RegisterFile FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef RegisterFileBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_BUFFER = 4
+    VT_STATUS = 4,
+    VT_DIRECTION = 6,
+    VT_CANFD_ENABLED = 8
   };
-  const flatbuffers::Vector<flatbuffers::Offset<NetworkModels::CAN::MetaFrame>> *buffer() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<NetworkModels::CAN::MetaFrame>> *>(VT_BUFFER);
+  NetworkModels::CAN::BufferStatus status() const {
+    return static_cast<NetworkModels::CAN::BufferStatus>(GetField<int8_t>(VT_STATUS, 0));
+  }
+  NetworkModels::CAN::BufferDirection direction() const {
+    return static_cast<NetworkModels::CAN::BufferDirection>(GetField<int8_t>(VT_DIRECTION, 0));
+  }
+  NetworkModels::CAN::CanFDIndicator canFD_enabled() const {
+    return static_cast<NetworkModels::CAN::CanFDIndicator>(GetField<int8_t>(VT_CANFD_ENABLED, 0));
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_BUFFER) &&
-           verifier.VerifyVector(buffer()) &&
-           verifier.VerifyVectorOfTables(buffer()) &&
+           VerifyField<int8_t>(verifier, VT_STATUS, 1) &&
+           VerifyField<int8_t>(verifier, VT_DIRECTION, 1) &&
+           VerifyField<int8_t>(verifier, VT_CANFD_ENABLED, 1) &&
            verifier.EndTable();
   }
 };
@@ -475,8 +472,14 @@ struct RegisterFileBuilder {
   typedef RegisterFile Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_buffer(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<NetworkModels::CAN::MetaFrame>>> buffer) {
-    fbb_.AddOffset(RegisterFile::VT_BUFFER, buffer);
+  void add_status(NetworkModels::CAN::BufferStatus status) {
+    fbb_.AddElement<int8_t>(RegisterFile::VT_STATUS, static_cast<int8_t>(status), 0);
+  }
+  void add_direction(NetworkModels::CAN::BufferDirection direction) {
+    fbb_.AddElement<int8_t>(RegisterFile::VT_DIRECTION, static_cast<int8_t>(direction), 0);
+  }
+  void add_canFD_enabled(NetworkModels::CAN::CanFDIndicator canFD_enabled) {
+    fbb_.AddElement<int8_t>(RegisterFile::VT_CANFD_ENABLED, static_cast<int8_t>(canFD_enabled), 0);
   }
   explicit RegisterFileBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -491,19 +494,14 @@ struct RegisterFileBuilder {
 
 inline flatbuffers::Offset<RegisterFile> CreateRegisterFile(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<NetworkModels::CAN::MetaFrame>>> buffer = 0) {
+    NetworkModels::CAN::BufferStatus status = NetworkModels::CAN::BufferStatus_None,
+    NetworkModels::CAN::BufferDirection direction = NetworkModels::CAN::BufferDirection_Tx,
+    NetworkModels::CAN::CanFDIndicator canFD_enabled = NetworkModels::CAN::CanFDIndicator_can) {
   RegisterFileBuilder builder_(_fbb);
-  builder_.add_buffer(buffer);
+  builder_.add_canFD_enabled(canFD_enabled);
+  builder_.add_direction(direction);
+  builder_.add_status(status);
   return builder_.Finish();
-}
-
-inline flatbuffers::Offset<RegisterFile> CreateRegisterFileDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<flatbuffers::Offset<NetworkModels::CAN::MetaFrame>> *buffer = nullptr) {
-  auto buffer__ = buffer ? _fbb.CreateVector<flatbuffers::Offset<NetworkModels::CAN::MetaFrame>>(*buffer) : 0;
-  return NetworkModels::CAN::CreateRegisterFile(
-      _fbb,
-      buffer__);
 }
 
 inline const NetworkModels::CAN::RegisterFile *GetRegisterFile(const void *buf) {
