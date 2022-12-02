@@ -6,71 +6,51 @@
 using namespace NetworkModels::CAN; // Specified in the schema.
 
 int main() {
-// Create a `FlatBufferBuilder`, which will be used to create our
-// monsters' FlatBuffers.
-flatbuffers::FlatBufferBuilder builder(1024);
 
-uint8_t frameId = 0;
-uint8_t payload_Data[] = {0,1,2,3};
-auto payload_vector = builder.CreateVector(payload_Data,4);
+    // Create a `FlatBufferBuilder`, which will be used to create our
+    flatbuffers::FlatBufferBuilder builder(1024);
 
-auto payloadLen = 0;
-bool rtr = 0;
-MessageTiming m ;
+    uint8_t frameId = 0;
+    uint8_t payload_Data[] = {0,1,2,3};
+    auto payload_vector = builder.CreateVector(payload_Data,4);
 
-MessageTiming v ={m.send_request(),m.arbitration(),m.reception()};
+    auto payloadLen = 0;
+    bool rtr = 0;
+    MessageTiming m ;
 
 
-auto frame1 = CreateFrame(builder,frameId,payload_vector,payloadLen,rtr,FrameType_standard_frame);
-
-auto meta_frame = CreateMetaFrame(builder,BufferStatus_None,BufferDirection_Tx,CanFDIndicator_can,frame1,&v);
+    MessageTiming v ={m.send_request(),m.arbitration(),m.reception()};
 
 
-std::vector<flatbuffers::Offset<MetaFrame>> MetaFrameVector;
-MetaFrameVector.push_back(meta_frame);
+    auto frame1 = CreateFrame(builder,frameId,payload_vector,payloadLen,rtr,FrameType_standard_frame);
 
-auto metaFrame = builder.CreateVector(MetaFrameVector);
-auto fileR = CreateRegisterFile(builder,metaFrame);
-
-builder.Finish(fileR);
+    auto meta_frame = CreateMetaFrame(builder,BufferStatus_None,BufferDirection_Tx,CanFDIndicator_can,frame1,&v);
 
 
-uint8_t *buf = builder.GetBufferPointer();
-int size = builder.GetSize(); 
+    std::vector<flatbuffers::Offset<MetaFrame>> MetaFrameVector;
+    MetaFrameVector.push_back(meta_frame);
 
-std::ofstream ofile("data.bin", std::ios::binary);
-ofile.write((char *)buf, size);
-ofile.close();
+    auto metaFrame = builder.CreateVector(MetaFrameVector);
+    auto fileR = CreateRegisterFile(builder,metaFrame);
 
-    std::ifstream infile;
-    infile.open("data.bin", std::ios::binary | std::ios::in);
-    infile.seekg(0,std::ios::end);
-    int length = infile.tellg();
-    infile.seekg(0,std::ios::beg);
-    char *data = new char[length];
-    infile.read(data, length);
-    infile.close();
-  
+    builder.Finish(fileR);
 
 
-std::cout << "size of buffer : " << size << std::endl; 
+    uint8_t *buf = builder.GetBufferPointer();
+    int size = builder.GetSize(); 
 
-auto metaData = GetRegisterFile(data);
+    std::ofstream ofile("network.can", std::ios::binary);
+    ofile.write((char *)buf, size);
+    ofile.close();
 
-auto bufferData = metaData->buffer();
+    
 
-auto frameData = bufferData->Get(0)->frame();
 
-auto client_payload = frameData->payload();
 
-for (size_t i = 0; i < client_payload->size(); i++)
-{
-    printf("%d",client_payload->Get(i));
-}
+ 
 
-auto payload_timestamp = bufferData->Get(0)->timing();
+ 
 
- printf("%d",payload_timestamp);
 
 }
 

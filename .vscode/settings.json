@@ -79,5 +79,6 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "${workspaceFolder}/all/flatbuffers1/android/app/src/main/cpp"
 }
