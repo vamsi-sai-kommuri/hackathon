@@ -17,6 +17,7 @@ using namespace NetworkModels::CAN; // Specified in the schema.
 int main()
 
 {
+     flatbuffers::FlatBufferBuilder builder(1024);
     system("title UDP Client");
 
     // initialise winsock
@@ -44,17 +45,29 @@ int main()
     server.sin_port = htons(PORT);
     server.sin_addr.S_un.S_addr = inet_addr(SERVER);
 
-    std::ifstream infile;
-    infile.open("network.can", std::ios::binary | std::ios::in);
-    infile.seekg(0,std::ios::end);
-    int length = infile.tellg();
-    infile.seekg(0,std::ios::beg);
-    char data[BUFLEN];
-    infile.read(data, length);
-    infile.close();
+
+    int frameId = 12;
+    uint8_t payload_Data[] = {0,1,2,3};
+    auto payload_vector = builder.CreateVector(payload_Data,4);
+    auto payloadLen = size_t(payload_Data);
+    bool rtr = 0;
+    MessageTiming m ;
+    MessageTiming v ={m.send_request(),m.arbitration(),m.reception()};
+
+    auto frame1 = CreateFrame(builder,frameId,payload_vector,payloadLen,rtr,FrameType_extended_fram);
+    auto meta_frame = CreateMetaFrame(builder,BufferStatus_MAX,BufferDirection_Rx,CanFDIndicator_canFD,frame1,&v);
+
+    std::vector<flatbuffers::Offset<MetaFrame>> MetaFrameVector;
+    MetaFrameVector.push_back(meta_frame);
+    auto metaFrame = builder.CreateVector(MetaFrameVector);
+    auto fileR = CreateRegisterFile(builder,metaFrame);
+
+    builder.Finish(fileR);
+
+    uint8_t *buf = builder.GetBufferPointer();
 
     // send the message
-    if (sendto(client_socket, data, BUFLEN, 0, (sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR)
+    if (sendto(client_socket, (char *)buf, BUFLEN, 0, (sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR)
     {
         printf("sendto() failed with error code: %d", WSAGetLastError());
         return 3;
@@ -64,10 +77,6 @@ int main()
     // start communication
     while (true)
     {
-
-
-        //char answer[BUFLEN] = {};
-
         char *answer = new char[BUFLEN];
 
         // try to receive some data, this is a blocking call
@@ -81,13 +90,10 @@ int main()
         }
         // print details of the client/peer and the data received
         printf("Received packet from %s:%d\n", inet_ntoa(server.sin_addr), ntohs(server.sin_port));
-        std::cout << answer << "\n";
+       
         auto metaData = GetRegisterFile(answer);
-
         auto bufferData = metaData->buffer();
-
         auto frameData = bufferData->Get(0)->frame();
-
         auto client_payload = frameData->payload();
 
         for (size_t i = 0; i < client_payload->size(); i++)

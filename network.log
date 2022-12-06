@@ -1,0 +1,31 @@
+{
+  buffer: [
+    {
+      status: "RxError",
+      direction: "Rx",
+      canFD_enabled: "canFD",
+      frame: {
+        frame_id: 12,
+        payload: [
+          0,
+          1,
+          2,
+          3
+        ],
+        length: 244,
+        type: "extended_fram"
+      },
+      timing: {
+        send_request: {
+          psec10: 0
+        },
+        arbitration: {
+          psec10: 0
+        },
+        reception: {
+          psec10: 0
+        }
+      }
+    }
+  ]
+}

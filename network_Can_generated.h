@@ -203,9 +203,6 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) TimeSpec FLATBUFFERS_FINAL_CLASS {
   int64_t psec10() const {
     return flatbuffers::EndianScalar(psec10_);
   }
-  void mutate_psec10(int64_t _psec10) {
-    flatbuffers::WriteScalar(&psec10_, _psec10);
-  }
 };
 FLATBUFFERS_STRUCT_END(TimeSpec, 8);
 
@@ -229,19 +226,10 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) MessageTiming FLATBUFFERS_FINAL_CLASS {
   const NetworkModels::CAN::TimeSpec &send_request() const {
     return send_request_;
   }
-  NetworkModels::CAN::TimeSpec &mutable_send_request() {
-    return send_request_;
-  }
   const NetworkModels::CAN::TimeSpec &arbitration() const {
     return arbitration_;
   }
-  NetworkModels::CAN::TimeSpec &mutable_arbitration() {
-    return arbitration_;
-  }
   const NetworkModels::CAN::TimeSpec &reception() const {
-    return reception_;
-  }
-  NetworkModels::CAN::TimeSpec &mutable_reception() {
     return reception_;
   }
 };
@@ -260,9 +248,6 @@ struct CanStatus FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   };
   NetworkModels::CAN::BusState sync() const {
     return static_cast<NetworkModels::CAN::BusState>(GetField<int8_t>(VT_SYNC, 1));
-  }
-  bool mutate_sync(NetworkModels::CAN::BusState _sync = static_cast<NetworkModels::CAN::BusState>(1)) {
-    return SetField<int8_t>(VT_SYNC, static_cast<int8_t>(_sync), 1);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -324,32 +309,17 @@ struct Frame FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   uint32_t frame_id() const {
     return GetField<uint32_t>(VT_FRAME_ID, 0);
   }
-  bool mutate_frame_id(uint32_t _frame_id = 0) {
-    return SetField<uint32_t>(VT_FRAME_ID, _frame_id, 0);
-  }
   const flatbuffers::Vector<uint8_t> *payload() const {
     return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_PAYLOAD);
-  }
-  flatbuffers::Vector<uint8_t> *mutable_payload() {
-    return GetPointer<flatbuffers::Vector<uint8_t> *>(VT_PAYLOAD);
   }
   uint8_t length() const {
     return GetField<uint8_t>(VT_LENGTH, 0);
   }
-  bool mutate_length(uint8_t _length = 0) {
-    return SetField<uint8_t>(VT_LENGTH, _length, 0);
-  }
   bool rtr() const {
     return GetField<uint8_t>(VT_RTR, 0) != 0;
   }
-  bool mutate_rtr(bool _rtr = 0) {
-    return SetField<uint8_t>(VT_RTR, static_cast<uint8_t>(_rtr), 0);
-  }
   NetworkModels::CAN::FrameType type() const {
     return static_cast<NetworkModels::CAN::FrameType>(GetField<int8_t>(VT_TYPE, 0));
-  }
-  bool mutate_type(NetworkModels::CAN::FrameType _type = static_cast<NetworkModels::CAN::FrameType>(0)) {
-    return SetField<int8_t>(VT_TYPE, static_cast<int8_t>(_type), 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -457,32 +427,17 @@ struct MetaFrame FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   NetworkModels::CAN::BufferStatus status() const {
     return static_cast<NetworkModels::CAN::BufferStatus>(GetField<int8_t>(VT_STATUS, 0));
   }
-  bool mutate_status(NetworkModels::CAN::BufferStatus _status = static_cast<NetworkModels::CAN::BufferStatus>(0)) {
-    return SetField<int8_t>(VT_STATUS, static_cast<int8_t>(_status), 0);
-  }
   NetworkModels::CAN::BufferDirection direction() const {
     return static_cast<NetworkModels::CAN::BufferDirection>(GetField<int8_t>(VT_DIRECTION, 0));
-  }
-  bool mutate_direction(NetworkModels::CAN::BufferDirection _direction = static_cast<NetworkModels::CAN::BufferDirection>(0)) {
-    return SetField<int8_t>(VT_DIRECTION, static_cast<int8_t>(_direction), 0);
   }
   NetworkModels::CAN::CanFDIndicator canFD_enabled() const {
     return static_cast<NetworkModels::CAN::CanFDIndicator>(GetField<int8_t>(VT_CANFD_ENABLED, 0));
   }
-  bool mutate_canFD_enabled(NetworkModels::CAN::CanFDIndicator _canFD_enabled = static_cast<NetworkModels::CAN::CanFDIndicator>(0)) {
-    return SetField<int8_t>(VT_CANFD_ENABLED, static_cast<int8_t>(_canFD_enabled), 0);
-  }
   const NetworkModels::CAN::Frame *frame() const {
     return GetPointer<const NetworkModels::CAN::Frame *>(VT_FRAME);
   }
-  NetworkModels::CAN::Frame *mutable_frame() {
-    return GetPointer<NetworkModels::CAN::Frame *>(VT_FRAME);
-  }
   const NetworkModels::CAN::MessageTiming *timing() const {
     return GetStruct<const NetworkModels::CAN::MessageTiming *>(VT_TIMING);
-  }
-  NetworkModels::CAN::MessageTiming *mutable_timing() {
-    return GetStruct<NetworkModels::CAN::MessageTiming *>(VT_TIMING);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -565,9 +520,6 @@ struct RegisterFile FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   };
   const flatbuffers::Vector<flatbuffers::Offset<NetworkModels::CAN::MetaFrame>> *buffer() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<NetworkModels::CAN::MetaFrame>> *>(VT_BUFFER);
-  }
-  flatbuffers::Vector<flatbuffers::Offset<NetworkModels::CAN::MetaFrame>> *mutable_buffer() {
-    return GetPointer<flatbuffers::Vector<flatbuffers::Offset<NetworkModels::CAN::MetaFrame>> *>(VT_BUFFER);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -779,14 +731,6 @@ inline const NetworkModels::CAN::RegisterFile *GetRegisterFile(const void *buf) 
 
 inline const NetworkModels::CAN::RegisterFile *GetSizePrefixedRegisterFile(const void *buf) {
   return flatbuffers::GetSizePrefixedRoot<NetworkModels::CAN::RegisterFile>(buf);
-}
-
-inline RegisterFile *GetMutableRegisterFile(void *buf) {
-  return flatbuffers::GetMutableRoot<RegisterFile>(buf);
-}
-
-inline NetworkModels::CAN::RegisterFile *GetMutableSizePrefixedRegisterFile(void *buf) {
-  return flatbuffers::GetMutableSizePrefixedRoot<NetworkModels::CAN::RegisterFile>(buf);
 }
 
 inline const char *RegisterFileIdentifier() {
