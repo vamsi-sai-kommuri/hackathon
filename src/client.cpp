@@ -14,16 +14,10 @@ using namespace NetworkModels::CAN; // Specified in the schema.
 sockaddr_in server;
 int client_socket;
 
-int formConnection() {
-  flatbuffers::FlatBufferBuilder builder(1024);
+bool formConnection() {
+  bool connectionStatus = false;
   // initialise winsock
   WSADATA ws;
-  int frameId = 12;
-  uint8_t payload_Data[] = {0, 1, 2, 3};
-  auto payload_vector = builder.CreateVector(payload_Data, 4);
-  auto payloadLen = size_t(payload_Data);
-  bool rtr = 0;
-  MessageTiming m;
   system("title UDP Client");
   printf("Initialising Winsock...");
 
@@ -36,6 +30,8 @@ int formConnection() {
       SOCKET_ERROR) // <<< UDP socket
   {
     printf("socket() failed with error code: %d", WSAGetLastError());
+  }else{
+    connectionStatus = true;
   }
 
   // setup address structure
@@ -44,12 +40,27 @@ int formConnection() {
   server.sin_port = htons(PORT);
   server.sin_addr.S_un.S_addr = inet_addr(SERVER);
 
+  return connectionStatus;
+
+
+}
+
+uint8_t *GenerateInputBuffer(){
+
+   flatbuffers::FlatBufferBuilder builder(1024);
+
+  int frameId = 12;
+  uint8_t payload_Data[] = {0, 1, 2, 3};
+  auto payload_vector = builder.CreateVector(payload_Data, 4);
+  auto payloadLen = size_t(payload_Data);
+  bool rtr = 0;
+  MessageTiming m;
+
   MessageTiming v = {m.send_request(), m.arbitration(), m.reception()};
 
   auto frame1 = CreateFrame(builder, frameId, payload_vector, payloadLen, rtr,
                             FrameType_extended_fram);
-  auto meta_frame =
-      CreateMetaFrame(builder, BufferStatus_MAX, BufferDirection_Rx,
+  auto meta_frame = CreateMetaFrame(builder, BufferStatus_MAX, BufferDirection_Rx,
                       CanFDIndicator_canFD, frame1, &v);
 
   std::vector<flatbuffers::Offset<MetaFrame>> MetaFrameVector;
@@ -59,15 +70,30 @@ int formConnection() {
   builder.Finish(fileR);
   uint8_t *buf = builder.GetBufferPointer();
 
+  return buf;
+
+}
+
+bool sendBuffer(uint8_t *buf){
+    
+  bool sendBufferStatus = false;
   // send the message
   if (sendto(client_socket, (char *)buf, BUFLEN, 0, (sockaddr *)&server,
              sizeof(sockaddr_in)) == SOCKET_ERROR) {
     printf("sendto() failed with error code: %d", WSAGetLastError());
-  }
-  return client_socket;
-}
-void receiveData(int cli_soc) {
+  }else{
 
+    sendBufferStatus = true;
+  }
+
+  return sendBufferStatus;
+  
+
+
+}
+
+bool receiveData() {
+  bool receiveBufferStatus = false;
   // start communication
   while (true) {
     char *answer = new char[BUFLEN];
@@ -75,7 +101,7 @@ void receiveData(int cli_soc) {
     int slen = sizeof(sockaddr_in);
     int answer_length;
 
-    if (answer_length = recvfrom(cli_soc, answer, BUFLEN, 0, (sockaddr *)&server,
+    if (answer_length = recvfrom(client_socket, answer, BUFLEN, 0, (sockaddr *)&server,
                                  &slen) == SOCKET_ERROR) {
       printf("recvfrom() failed with error code: %d", WSAGetLastError());
       exit(0);
@@ -94,10 +120,15 @@ void receiveData(int cli_soc) {
     }
     exit(0);
   }
+  receiveBufferStatus=true;
   closesocket(client_socket);
   WSACleanup();
+  return receiveBufferStatus;
 }
 int main() {
-  int client_sock = formConnection();
-  receiveData(client_sock);
+  formConnection();
+  uint8_t *buf = GenerateInputBuffer();
+  sendBuffer(buf);
+  receiveData();
+
 }
